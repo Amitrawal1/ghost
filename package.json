@@ -1,6 +1,6 @@
 {
   "name": "ghost-assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Free AI interview helper: an always-on-top overlay that is hidden from screen shares. Bring your own free Groq key. macOS and Windows.",
   "main": "src/main.js",
   "bin": {
