@@ -14,12 +14,12 @@ It is left out of screen shares and screenshots, so only you see it.
 
 **macOS** — open Terminal and paste:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/ghost-assistant/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.sh | bash
 ```
 
 **Windows 10/11** — open PowerShell and paste:
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/ghost-assistant/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 | iex
 ```
 
 The installer:
@@ -85,8 +85,8 @@ Install [Ollama](https://ollama.com), then in Ghost's ⚙ Settings set the base 
 ## Install by hand (for developers)
 You need [Node.js 20+](https://nodejs.org) and git.
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/ghost-assistant.git
-cd ghost-assistant
+git clone https://github.com/Amitrawal1/ghost.git
+cd ghost
 npm install
 npm start          # or: npm link, then type ghost anywhere
 ```

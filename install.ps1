@@ -1,5 +1,5 @@
 # Ghost Assistant installer for Windows 10/11. Run it in PowerShell with:
-#   irm https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/ghost-assistant/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 | iex
 #
 # What it does, all inside %USERPROFILE%\.ghost (no admin rights, nothing system-wide):
 #   1. uses your Node.js 20+ if you have it, otherwise downloads a private copy (checksum verified)
@@ -13,7 +13,7 @@ function Install-Ghost {
   $ProgressPreference = 'SilentlyContinue' # the progress bar makes downloads ~10x slower in Windows PowerShell
   [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-  $Repo = if ($env:GHOST_REPO) { $env:GHOST_REPO } else { 'YOUR_GITHUB_USERNAME/ghost-assistant' }
+  $Repo = if ($env:GHOST_REPO) { $env:GHOST_REPO } else { 'Amitrawal1/ghost' }
   $Branch = if ($env:GHOST_BRANCH) { $env:GHOST_BRANCH } else { 'main' }
   $GhostHome = if ($env:GHOST_HOME) { $env:GHOST_HOME } else { Join-Path $HOME '.ghost' }
   $App = Join-Path $GhostHome 'app'

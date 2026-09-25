@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Ghost Assistant installer for macOS. Run it with:
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/ghost-assistant/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.sh | bash
 #
 # What it does, all inside ~/.ghost (no sudo, nothing system-wide):
 #   1. uses your Node.js 20+ if you have it, otherwise downloads a private copy (checksum verified)
@@ -10,7 +10,7 @@
 # Running it again updates Ghost and keeps your settings.
 set -euo pipefail
 
-REPO="${GHOST_REPO:-YOUR_GITHUB_USERNAME/ghost-assistant}"
+REPO="${GHOST_REPO:-Amitrawal1/ghost}"
 BRANCH="${GHOST_BRANCH:-main}"
 GHOST_HOME="${GHOST_HOME:-$HOME/.ghost}"
 APP="$GHOST_HOME/app"
