@@ -17,7 +17,7 @@ const DEFAULT_SETTINGS = {
   sttModel: 'whisper-large-v3-turbo',
   context: '',
   mode: 'interview',
-  expandedHeight: 620,
+  expandedHeight: 400,
 };
 
 let win;
@@ -53,9 +53,9 @@ function saveSettings(patch) {
 function createWindow() {
   const { width } = screen.getPrimaryDisplay().workAreaSize;
   win = new BrowserWindow({
-    width: 520,
-    height: 560,
-    x: width - 540,
+    width: 600,
+    height: 400,
+    x: width - 620,
     y: 40,
     frame: false,
     transparent: true,
@@ -282,7 +282,7 @@ ipcMain.on('window-size', (_e, mode, compactHeight) => {
     }
     win.setBounds({ x, y, width, height: target });
   } else {
-    const target = expandedHeight || loadSettings().expandedHeight || 620;
+    const target = expandedHeight || loadSettings().expandedHeight || 400;
     if (height >= target) return;
     const maxH = screen.getDisplayMatching(win.getBounds()).workArea.height - 20;
     win.setBounds({ x, y, width, height: Math.min(target, maxH) });
