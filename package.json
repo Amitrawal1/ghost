@@ -4,19 +4,29 @@
   "description": "Free AI interview helper: an always-on-top overlay that is hidden from screen shares. Bring your own free Groq key. macOS and Windows.",
   "main": "src/main.js",
   "bin": {
-    "ghost": "bin/ghost.js"
+    "ghost": "bin/ghost.js",
+    "ghost-assistant": "bin/ghost.js"
   },
+  "files": [
+    "bin/",
+    "src/"
+  ],
   "scripts": {
     "start": "electron .",
     "setup": "node bin/ghost.js setup",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --mac",
-    "dist:win": "electron-builder --win"
+    "pack": "node scripts/build.js --dir",
+    "dist": "node scripts/build.js --mac",
+    "dist:win": "node scripts/build.js --win"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Amitrawal1/ghost.git"
   },
+  "homepage": "https://github.com/Amitrawal1/ghost#readme",
+  "bugs": {
+    "url": "https://github.com/Amitrawal1/ghost/issues"
+  },
+  "author": "AMIT Rawal",
   "keywords": [
     "electron",
     "ai",
@@ -30,10 +40,10 @@
     "node": ">=20"
   },
   "dependencies": {
+    "electron": "^44.4.3",
     "unpdf": "^1.8.1"
   },
   "devDependencies": {
-    "electron": "^44.4.3",
     "electron-builder": "^26.15.3"
   },
   "build": {

@@ -22,6 +22,14 @@ curl -fsSL https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.sh | 
 irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 | iex
 ```
 
+**Already have Node.js 20+?** You can use npm instead, on any system:
+```bash
+npm install -g ghost-assistant
+ghost
+```
+The first `ghost` downloads Electron (about 100 MB) and runs the setup below.
+If another tool already owns the `ghost` command, use `ghost-assistant` instead. It does the same thing.
+
 The installer:
 1. installs everything Ghost needs (Node.js and Electron) into a `.ghost` folder in your home folder, with no admin password,
 2. adds the `ghost` command,
@@ -103,6 +111,7 @@ Windows SmartScreen shows "Windows protected your PC": click More info → Run a
 
 ## Uninstall
 - **macOS:** `rm -rf ~/.ghost ~/Library/Application\ Support/ghost-assistant`, then delete the `# Ghost Assistant` lines from `~/.zshrc`.
+- **Installed with npm:** `npm uninstall -g ghost-assistant`, then delete the settings folder listed above.
 - **Windows:** delete `%USERPROFILE%\.ghost` and `%APPDATA%\ghost-assistant`, and remove `.ghost\bin` from your user PATH (Settings → System → About → Advanced system settings → Environment Variables).
 
 ## Project layout
@@ -116,6 +125,7 @@ Windows SmartScreen shows "Windows protected your PC": click More info → Run a
 | `src/resume.js` | Reads PDF / Word resumes |
 | `bin/ghost.js`, `bin/setup.js` | The `ghost` command and the setup wizard |
 | `install.sh`, `install.ps1` | One-line installers |
+| `scripts/build.js` | Runs electron-builder (moves Electron to devDependencies just for the build) |
 
 Plain JavaScript and Electron, no framework, no bundler. Pull requests are welcome.
 

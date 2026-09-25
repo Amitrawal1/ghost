@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The `ghost` command.
+// The `ghost` command (also installed as `ghost-assistant`, in case another tool owns `ghost`).
 //   ghost           start the overlay (runs setup first if there is no API key yet)
 //   ghost setup     change the API key, profile or resume
 //   ghost update    get the latest version
@@ -55,6 +55,11 @@ function update() {
     // Installed with git clone: pull and refresh packages.
     if (sh('git', ['pull', '--ff-only']) !== 0) return 1;
     return sh('npm', ['install', '--no-audit', '--no-fund']);
+  }
+  // Installed with `npm install -g ghost-assistant`: ask npm for the latest version.
+  if (APP_DIR.split(path.sep).includes('node_modules')) {
+    return spawnSync('npm', ['install', '-g', `${pkg.name}@latest`], { stdio: 'inherit', shell: process.platform === 'win32' })
+      .status;
   }
   // Installed with the one-line installer: run it again. It keeps settings and skips setup.
   const repo = String(pkg.repository?.url || '').match(/github\.com[/:]([^/]+\/[^/.]+)/)?.[1];
