@@ -1,0 +1,100 @@
+{
+  "name": "ghost-assistant",
+  "version": "1.0.0",
+  "description": "Free AI interview helper: an always-on-top overlay that is hidden from screen shares. Bring your own free Groq key. macOS and Windows.",
+  "main": "src/main.js",
+  "bin": {
+    "ghost": "bin/ghost.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "setup": "node bin/ghost.js setup",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_GITHUB_USERNAME/ghost-assistant.git"
+  },
+  "keywords": [
+    "electron",
+    "ai",
+    "interview",
+    "overlay",
+    "groq",
+    "whisper"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "unpdf": "^1.8.1"
+  },
+  "devDependencies": {
+    "electron": "^44.4.3",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.ghost.assistant",
+    "productName": "Ghost Assistant",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Ghost Assistant listens to your microphone to transcribe questions and answer them.",
+        "NSScreenCaptureUsageDescription": "Ghost Assistant reads your screen to answer questions about what is shown.",
+        "NSAudioCaptureUsageDescription": "Ghost Assistant captures system audio to transcribe the other side of a call.",
+        "LSUIElement": true
+      }
+    },
+    "dmg": {
+      "sign": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
+  }
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:" />
+  <title>Ghost Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="panel">
+    <header class="drag">
+      <span class="title">👻 Ghost</span>
+      <span id="status" class="status">Ready</span>
+      <span id="stealth-ind" class="stealth-ind hidden" title="Stealth status"></span>
+      <div id="modes" class="seg no-drag" title="Answer mode (⌘⇧M)">
+        <button data-mode="interview">Interview</button>
+        <button data-mode="coding">Code</button>
+        <button data-mode="general">General</button>
+      </div>
+      <div class="actions no-drag">
+        <button id="btn-settings" title="Settings">⚙</button>
+        <button id="btn-hide" title="Hide (⌘⇧Space)">—</button>
+      </div>
+    </header>
+
+    <div id="micbar" class="micbar no-drag" data-mode="off" data-phase="idle" title="Microphone status">
+      <span class="mic-dot"></span>
+      <span class="mic-text">
+        <span id="mic-label" class="mic-label">Mic off</span>
+        <span id="mic-sub" class="mic-sub">⌘⇧L live listen · ⌘⇧R record</span>
+      </span>
+      <span id="meter" class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span id="mic-time" class="mic-time"></span>
+      <button id="btn-size" class="size-toggle" title="Expand / shrink the window">⌄</button>
+    </div>
+
+    <section id="settings" class="settings hidden no-drag">
+      <label>API base URL <input id="s-baseUrl" /></label>
+      <label>API key <input id="s-apiKey" type="password" placeholder="gsk_... (free at console.groq.com)" /></label>
+      <label>Chat model <input id="s-chatModel" /></label>
+      <label>Vision model <input id="s-visionModel" /></label>
+      <label>Speech-to-text model <input id="s-sttModel" /></label>
+      <label>Audio source
+        <select id="s-source" disabled>
+          <option value="system">Only other people (laptop audio) — your mic is never used</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="s-autoListen" /> Start listening automatically when Ghost opens</label>
+      <label>Your background (resume, role, notes)
+        <button id="btn-resume" type="button" title="Pick a PDF / Word / text file">📄 Load resume</button>
+        <textarea id="s-context" rows="6"></textarea>
+      </label>
+      <div class="row">
+        <span class="row-label">Text size</span>
+        <button id="btn-font-down" title="Smaller text">A−</button>
+        <span id="font-size-val" class="font-val">13px</span>
+        <button id="btn-font-up" title="Larger text">A+</button>
+        <span class="spacer"></span>
+        <button id="btn-check-hidden" title="Capture the screen here to confirm the overlay is invisible">Check hidden</button>
+      </div>
+      <button id="btn-save" class="primary">Save</button>
+    </section>
+
+    <main id="output" class="output no-drag">
+      <div class="hint">
+        <div class="hint-title">Ready when you are</div>
+        <dl>
+          <dt><kbd>⌘⇧L</kbd></dt><dd>Live listen, answers questions automatically</dd>
+          <dt><kbd>⌘⇧R</kbd></dt><dd>Record once, then answer</dd>
+          <dt><kbd>⌘⇧↩</kbd></dt><dd>Read the screen and answer</dd>
+          <dt><kbd>⌘⇧I</kbd></dt><dd>Type a question</dd>
+          <dt><kbd>⌘⇧M</kbd></dt><dd>Switch answer mode</dd>
+          <dt><kbd>⌘⇧K</kbd></dt><dd>Clear</dd>
+          <dt><kbd>⌘⇧T</kbd></dt><dd>Click-through · <kbd>⌘⇧O</kbd> <kbd>⌘⇧P</kbd> opacity</dd>
+          <dt><kbd>⌘⇧Space</kbd></dt><dd>Show / hide · <kbd>⌘⇧Q</kbd> quit</dd>
+        </dl>
+      </div>
+    </main>
+
+    <footer class="no-drag">
+      <button id="btn-mic" class="ctl" title="Record once, then answer (⌘⇧R)"><span class="ic">🎙</span><span class="lbl">Record</span></button>
+      <button id="btn-live" class="ctl" title="Live listen, auto-answer (⌘⇧L)"><span class="ic">◉</span><span class="lbl">Live</span></button>
+      <button id="btn-source" class="src" title="Listening to other people only (laptop audio). Your mic is never used.">Sys</button>
+      <button id="btn-screen" class="ctl" title="Read screen (⌘⇧Enter)"><span class="ic">🖥</span></button>
+      <input id="input" placeholder="Ask anything…" />
+    </footer>
+  </div>
+  <script src="renderer.js"></script>
+  <script src="audio-renderer.js"></script>
+</body>
+</html>
