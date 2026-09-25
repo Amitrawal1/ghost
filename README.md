@@ -55,6 +55,8 @@ irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 | iex
 
 Options 2 and 3 need nothing installed first. They download Node.js by themselves when you don't have it.
 
+Want to remove Ghost later? See [Uninstall](#uninstall).
+
 ### What setup asks you
 The first time, Ghost asks for:
 1. your **Groq API key**. Get one free at [console.groq.com/keys](https://console.groq.com/keys). Ghost checks that the key works.
@@ -135,9 +137,44 @@ These builds are not code-signed. macOS may say the app is "damaged": run `xattr
 Windows SmartScreen shows "Windows protected your PC": click More info → Run anyway.
 
 ## Uninstall
-- **macOS:** `rm -rf ~/.ghost ~/Library/Application\ Support/ghost-assistant`, then delete the `# Ghost Assistant` lines from `~/.zshrc`.
-- **Installed with npm:** `npm uninstall -g ghost-assistant`, then delete the settings folder listed above.
-- **Windows:** delete `%USERPROFILE%\.ghost` and `%APPDATA%\ghost-assistant`, and remove `.ghost\bin` from your user PATH (Settings → System → About → Advanced system settings → Environment Variables).
+
+**First, quit Ghost:** press ⌘⇧Q on macOS or Ctrl+Shift+Q on Windows.
+Then use the steps for the way you installed it.
+
+> The last command in each block deletes your saved settings: API key, profile and resume.
+> Leave it out if you might reinstall later and want to keep them.
+
+### macOS, installed with the one-line installer
+Paste into Terminal:
+```bash
+rm -rf ~/.ghost
+sed -i '' -e '/^# Ghost Assistant$/d' -e '/\.ghost\/bin/d' ~/.zshrc ~/.bash_profile 2>/dev/null
+rm -rf ~/Library/Application\ Support/ghost-assistant
+```
+The first line removes Ghost, the second removes the `ghost` command from your shell, and the third deletes your settings.
+
+### Windows, installed with the one-line installer
+Paste into PowerShell:
+```powershell
+Remove-Item -Recurse -Force "$HOME\.ghost" -ErrorAction SilentlyContinue
+$p = [Environment]::GetEnvironmentVariable('Path', 'User') -split ';' | Where-Object { $_ -and $_ -notlike '*\.ghost\bin' }
+[Environment]::SetEnvironmentVariable('Path', ($p -join ';'), 'User')
+Remove-Item -Recurse -Force "$env:APPDATA\ghost-assistant" -ErrorAction SilentlyContinue
+```
+The first line removes Ghost, the next two remove the `ghost` command from your PATH, and the last deletes your settings.
+
+### Installed with npm (any system)
+```bash
+npm uninstall -g ghost-assistant
+```
+Then delete your settings: on macOS `rm -rf ~/Library/Application\ Support/ghost-assistant`, on Windows (PowerShell) `Remove-Item -Recurse -Force "$env:APPDATA\ghost-assistant"`.
+
+### Installed with git clone
+Delete the `ghost` folder you cloned. If you ran `npm link`, run `npm unlink -g ghost-assistant` first. Then delete your settings as shown above.
+
+### Optional: remove the macOS permission
+System Settings → Privacy & Security → Screen & System Audio Recording → select your terminal app and click **−**.
+Only do this if no other app you use needs it.
 
 ## Project layout
 | File | What it does |
