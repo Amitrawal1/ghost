@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Amitrawal1/ghost.git"
+    "url": "git+https://github.com/Amitrawal1/ghost.git"
   },
   "homepage": "https://github.com/Amitrawal1/ghost#readme",
   "bugs": {
