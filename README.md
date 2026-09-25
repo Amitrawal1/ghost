@@ -1,5 +1,9 @@
 # 👻 Ghost Assistant
 
+[![npm version](https://img.shields.io/npm/v/ghost-assistant?color=cb3837&logo=npm)](https://www.npmjs.com/package/ghost-assistant)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
+
 A free, open-source AI helper for interviews and meetings. It floats on top of your screen,
 listens to the other people on the call, and shows a short answer you can say out loud.
 It is left out of screen shares and screenshots, so only you see it.
@@ -10,34 +14,55 @@ It is left out of screen shares and screenshots, so only you see it.
 - **Hands-free.** It starts listening by itself and answers questions automatically.
 - Reads your screen for coding questions, and knows your resume so it answers *as you*.
 
-## Install (one command)
+## Install
 
-**macOS** — open Terminal and paste:
+Pick **one** of these. All three give you the same `ghost` command.
+
+| Your computer | Command |
+|---|---|
+| **Any system with Node.js 20+** | `npm install -g ghost-assistant` |
+| **macOS** (no Node.js needed) | `curl -fsSL https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.sh \| bash` |
+| **Windows 10/11** (no Node.js needed) | `irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 \| iex` |
+
+Then type:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.sh | bash
+ghost
 ```
 
-**Windows 10/11** — open PowerShell and paste:
-```powershell
-irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 | iex
-```
-
-**Already have Node.js 20+?** You can use npm instead, on any system:
+### Option 1: npm
+If you already have [Node.js](https://nodejs.org) 20 or newer (check with `node -v`), this works on macOS and Windows:
 ```bash
 npm install -g ghost-assistant
 ghost
 ```
-The first `ghost` downloads Electron (about 100 MB) and runs the setup below.
+The first `ghost` downloads Electron (about 100 MB) and runs the setup wizard.
 If another tool already owns the `ghost` command, use `ghost-assistant` instead. It does the same thing.
 
-The installer:
-1. installs everything Ghost needs (Node.js and Electron) into a `.ghost` folder in your home folder, with no admin password,
-2. adds the `ghost` command,
-3. asks for your **Groq API key** (it checks that the key works),
-4. asks a few questions about you: name, the job role, experience, top skills,
-5. asks for your **resume**. Drag the PDF or Word file into the terminal window and press Enter.
+> On macOS, if npm says `EACCES` (permission denied), don't use `sudo`. Use Option 2 instead,
+> or install Node.js with [nvm](https://github.com/nvm-sh/nvm).
 
-It takes about two minutes.
+### Option 2: macOS one-line installer
+Open Terminal and paste:
+```bash
+curl -fsSL https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.sh | bash
+```
+
+### Option 3: Windows one-line installer
+Open PowerShell and paste:
+```powershell
+irm https://raw.githubusercontent.com/Amitrawal1/ghost/main/install.ps1 | iex
+```
+
+Options 2 and 3 need nothing installed first. They download Node.js by themselves when you don't have it.
+
+### What setup asks you
+The first time, Ghost asks for:
+1. your **Groq API key**. Get one free at [console.groq.com/keys](https://console.groq.com/keys). Ghost checks that the key works.
+2. a few details about you: name, the job role, experience, top skills,
+3. your **resume**. Drag the PDF or Word file into the terminal window and press Enter.
+
+Everything is saved only on your computer. Run `ghost setup` any time to change it.
+The whole install takes about two minutes. The one-line installers keep everything in a `.ghost` folder in your home folder and need no admin password.
 
 ## Use it
 
