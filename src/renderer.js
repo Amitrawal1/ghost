@@ -2,7 +2,7 @@ const $ = (id) => document.getElementById(id);
 const output = $('output');
 const input = $('input');
 const statusEl = $('status');
-const SETTING_KEYS = ['baseUrl', 'apiKey', 'chatModel', 'visionModel', 'sttModel', 'context'];
+const SETTING_KEYS = ['baseUrl', 'apiKey', 'chatModel', 'visionModel', 'sttModel', 'language', 'context'];
 const MODES = ['interview', 'coding', 'general'];
 const MODE_LABELS = { interview: 'Interview', coding: 'Coding', general: 'General' };
 
@@ -175,6 +175,18 @@ function renderMarkdown(md) {
 
 // ---------- Messages ----------
 
+// Keep the newest text in view while an answer streams, but let the user scroll up to read without
+// being yanked back down. Scrolling is instant on purpose: the new card already glides in via CSS,
+// and a smooth scroll per chunk would lag behind the text and fight the next chunk.
+let stickToBottom = true;
+output.addEventListener('scroll', () => {
+  stickToBottom = output.scrollHeight - output.scrollTop - output.clientHeight < 48;
+});
+function scrollToEnd(force = false) {
+  if (force) stickToBottom = true;
+  if (stickToBottom) output.scrollTop = output.scrollHeight;
+}
+
 function addMessage(cls, html) {
   if (cls.includes('error')) {
     expand();
@@ -185,7 +197,7 @@ function addMessage(cls, html) {
   el.className = `msg ${cls}`;
   el.innerHTML = html;
   output.appendChild(el);
-  output.scrollTop = output.scrollHeight;
+  scrollToEnd(true);
   return el;
 }
 
@@ -242,11 +254,18 @@ window.ghost.on('answer-chunk', (delta) => {
   if (!currentBot) return;
   currentText += delta;
   currentBot.innerHTML = renderMarkdown(currentText);
-  output.scrollTop = output.scrollHeight;
+  scrollToEnd();
 });
 
+// A request that arrives mid-answer (e.g. ⌘⇧Return while a live answer streams) waits its
+// turn instead of being dropped.
+const queue = [];
 async function run(label, fn) {
-  if (busy) return;
+  if (busy) {
+    if (queue.length < 3) queue.push([label, fn]);
+    setStatus('Queued — answering after this one', 'busy');
+    return;
+  }
   expand();
   busy = true;
   setStatus('Thinking…', 'busy');
@@ -259,18 +278,20 @@ async function run(label, fn) {
     if (!currentText && typeof answer === 'string' && answer) {
       currentText = answer;
       currentBot.innerHTML = renderMarkdown(answer);
+      scrollToEnd();
     }
     if (currentText) finalizeBot(msg, currentText);
     msg.classList.remove('streaming');
     setStatus('Ready');
   } catch (err) {
     msg.remove();
-    addMessage('error', escapeHtml(err.message));
+    addMessage('error', escapeHtml(String(err.message).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')));
     window.ghost.send('log', `run failed: ${err && err.stack ? err.stack : err}`);
     setStatus('Error');
   } finally {
     currentBot = null;
     busy = false;
+    if (queue.length) run(...queue.shift());
   }
 }
 
@@ -297,7 +318,21 @@ function clearAll() {
 
 function renderMode() {
   document.querySelectorAll('#modes button').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+  placeModePill();
 }
+
+// The active mode has a pill behind it that slides between buttons (see .seg::before in styles.css).
+// Until it has been measured, the active button keeps its own background, so nothing ever looks unselected.
+function placeModePill() {
+  const seg = $('modes');
+  const active = seg.querySelector('button.active');
+  if (!active || !active.offsetWidth) return seg.classList.remove('ready');
+  seg.style.setProperty('--seg-x', `${active.offsetLeft}px`);
+  seg.style.setProperty('--seg-w', `${active.offsetWidth}px`);
+  seg.classList.add('ready');
+}
+document.fonts?.ready.then(placeModePill).catch(() => {});
+window.addEventListener('resize', placeModePill);
 
 async function setMode(next, announce = true) {
   if (!MODES.includes(next)) return;
@@ -343,7 +378,7 @@ $('btn-font-up').onclick = () => applyFontSize(fontSize + 1);
 // ---------- Stealth ----------
 
 async function checkHidden() {
-  $('settings').classList.add('hidden');
+  closeSettings();
   setStatus('Capturing…', 'busy');
   try {
     const res = await window.ghost.invoke('stealth-check');
@@ -465,7 +500,7 @@ function micTexts({ mode, phase, source }) {
     return [label, `${src} · auto-answers questions · ⌘⇧L to stop`];
   }
   if (phase === 'transcribing') return ['Transcribing…', 'Turning speech into text'];
-  return ['Mic off', '⌘⇧L live listen · ⌘⇧R record'];
+  return ['Not listening', '⌘⇧L live listen · ⌘⇧R record'];
 }
 
 function renderMic(st) {
@@ -505,13 +540,39 @@ window.addEventListener('audio-state', (e) => renderMic(e.detail));
 
 // ---------- Settings ----------
 
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let settingsCloseTimer = 0;
+
+// Plays the short slide-up (.closing in styles.css), then hides. 'hidden' stays the real state flag.
+function closeSettings() {
+  const panel = $('settings');
+  if (panel.classList.contains('hidden')) return;
+  clearTimeout(settingsCloseTimer);
+  if (reducedMotion.matches) return panel.classList.add('hidden');
+  panel.classList.add('closing');
+  const done = () => {
+    clearTimeout(settingsCloseTimer);
+    panel.removeEventListener('animationend', done);
+    if (!panel.classList.contains('closing')) return; // reopened meanwhile
+    panel.classList.add('hidden');
+    panel.classList.remove('closing');
+  };
+  panel.addEventListener('animationend', done);
+  settingsCloseTimer = setTimeout(done, 180); // fallback if the animation never runs
+}
+
 async function openSettings() {
   const panel = $('settings');
   expand();
-  panel.classList.toggle('hidden');
-  if (panel.classList.contains('hidden')) return;
+  if (!panel.classList.contains('hidden') && !panel.classList.contains('closing')) return closeSettings();
+  clearTimeout(settingsCloseTimer);
+  panel.classList.remove('closing', 'hidden');
   const settings = await window.ghost.getSettings();
-  SETTING_KEYS.forEach((k) => ($(`s-${k}`).value = settings[k] || ''));
+  SETTING_KEYS.forEach((k) => {
+    const el = $(`s-${k}`);
+    el.value = settings[k] || '';
+    if (el.tagName === 'SELECT' && el.selectedIndex < 0) el.selectedIndex = 0; // e.g. no language saved yet → Auto
+  });
   $('s-source').value = window.audio?.getSource?.() || 'system';
   $('s-autoListen').checked = window.audio?.getAutoListen?.() ?? true;
 }
@@ -525,7 +586,7 @@ async function saveSettings() {
     window.audio?.setAutoListen?.($('s-autoListen').checked);
     showSource(window.audio?.getSource?.());
   } catch {}
-  $('settings').classList.add('hidden');
+  closeSettings();
   setStatus('Settings saved');
 }
 

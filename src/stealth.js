@@ -16,7 +16,9 @@ const STEP = 0.1;
 const MIN_W = 240;
 const MIN_H = 160;
 
-module.exports = function setupStealth({ win, app, globalShortcut, ipcMain }) {
+module.exports = function setupStealth({ win, app, globalShortcut, ipcMain, getSources }) {
+  // main.js passes a serialized getSources so the self-test never overlaps a screen read.
+  const listSources = getSources || ((opts) => desktopCapturer.getSources(opts));
   const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
   let clickThrough = false;
   let opacity = 1.0;
@@ -117,7 +119,7 @@ module.exports = function setupStealth({ win, app, globalShortcut, ipcMain }) {
     const bounds = win.getBounds();
     const display = screen.getDisplayMatching(bounds);
     const sf = display.scaleFactor || 1;
-    const sources = await desktopCapturer.getSources({
+    const sources = await listSources({
       types: ['screen'],
       thumbnailSize: {
         width: Math.round(display.size.width * sf),

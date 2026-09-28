@@ -23,10 +23,10 @@
       </div>
     </header>
 
-    <div id="micbar" class="micbar no-drag" data-mode="off" data-phase="idle" title="Microphone status">
+    <div id="micbar" class="micbar no-drag" data-mode="off" data-phase="idle" title="Listening status">
       <span class="mic-dot"></span>
       <span class="mic-text">
-        <span id="mic-label" class="mic-label">Mic off</span>
+        <span id="mic-label" class="mic-label">Not listening</span>
         <span id="mic-sub" class="mic-sub">⌘⇧L live listen · ⌘⇧R record</span>
       </span>
       <span id="meter" class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
@@ -45,6 +45,14 @@
           <option value="system">Only other people (laptop audio) — your mic is never used</option>
         </select>
       </label>
+      <label>Language they speak
+        <select id="s-language">
+          <option value="auto">Auto — answer in the language of the question</option>
+          <option value="en">English</option>
+          <option value="hi">Hindi (हिंदी)</option>
+          <option value="hinglish">Hinglish (Hindi + English mix)</option>
+        </select>
+      </label>
       <label class="check"><input type="checkbox" id="s-autoListen" /> Start listening automatically when Ghost opens</label>
       <label>Your background (resume, role, notes)
         <button id="btn-resume" type="button" title="Pick a PDF / Word / text file">📄 Load resume</button>
@@ -53,7 +61,7 @@
       <div class="row">
         <span class="row-label">Text size</span>
         <button id="btn-font-down" title="Smaller text">A−</button>
-        <span id="font-size-val" class="font-val">13px</span>
+        <span id="font-size-val" class="font-val">16px</span>
         <button id="btn-font-up" title="Larger text">A+</button>
         <span class="spacer"></span>
         <button id="btn-check-hidden" title="Capture the screen here to confirm the overlay is invisible">Check hidden</button>

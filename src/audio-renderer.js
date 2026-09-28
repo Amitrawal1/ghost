@@ -491,7 +491,8 @@
   }
 
   // Whisper often "hears" these in silence or music.
-  const NOISE = /^(thank you|thanks( for watching)?|you|bye|okay|ok|uh+|um+|hmm+|\.+|♪+)[.!?\s]*$/i;
+  const NOISE =
+    /^(thank you|thanks( for watching)?|you|bye|okay|ok|uh+|um+|hmm+|\.+|♪+|धन्यवाद|शुक्रिया|dhanyavaad|shukriya|ji|haan)[.!?।\s]*$/i;
   function isNoise(t) {
     return NOISE.test(t.trim());
   }
@@ -502,12 +503,16 @@
   // yourself", "Okay, so walk me through your project").
   const ASKS =
     /\b(tell (me|us)|introduce yourself|describe|explain|walk (me|us) through|what|why|how|which|can you|could you|would you|do you|did you|have you|are you|share|give (me|us)|talk (about|me)|your (experience|projects?|strengths?|weakness(es)?|role|background|skills|goals?))\b/i;
+  // Hindi / Hinglish asks, in Roman and Devanagari script ("aap apne baare mein batao",
+  // "आपका प्रोजेक्ट क्या था", "kya aap explain kar sakte ho").
+  const HINDI_ASKS =
+    /(^|[\s,.])(kya|kyu|kyun|kyon|kaise|kaisa|kaisi|kab|kahan|kaha|kaun|kon|kitna|kitne|kitni|konsa|kaunsa|batao|bataiye|bataye|samjhao|samjhaiye|sunao|dikhao|likho|baare mein|bare me|sakte ho|sakti ho|sakte hain|kijiye|kariye|karo|क्या|क्यों|कैसे|कैसा|कब|कहाँ|कहां|कौन|कितना|कितने|कौनसा|बताइए|बताइये|बताओ|बताएं|समझाइए|समझाओ|सुनाइए|बारे में|सकते हैं|सकते हो|कीजिए)(?=$|[\s,.?!।])/i;
   function looksLikePrompt(t) {
     if (isNoise(t)) return false;
     const words = t.split(/\s+/).filter(Boolean);
     if (words.length < 3) return false;
-    if (/\?/.test(t)) return true;
-    if (PROMPT_START.test(t) || ASKS.test(t)) return true;
+    if (/[?؟]/.test(t)) return true;
+    if (PROMPT_START.test(t) || ASKS.test(t) || HINDI_ASKS.test(t)) return true;
     return words.length >= 10; // long statements in an interview are usually prompts
   }
 

@@ -29,12 +29,15 @@ try {
   console.error('[audio] could not enable loopback features:', err);
 }
 
-module.exports = function setupAudio({ win, ipcMain, loadSettings }) {
+module.exports = function setupAudio({ win, ipcMain, loadSettings, getSources }) {
+  // main.js passes a serialized getSources so this never overlaps a screen read.
+  const listSources = getSources || ((opts) => desktopCapturer.getSources(opts));
   // Keep VAD timers running at full speed while the overlay is hidden.
   win.webContents.setBackgroundThrottling(false);
 
   // getDisplayMedia() from our renderer → grant a screen video track (the renderer
-  // drops it immediately) plus system audio loopback. No picker is shown.
+  // stops it immediately; no frame is ever read or sent) plus system audio loopback.
+  // No picker is shown. The 0×0 thumbnail means no screen image is made here.
   session.defaultSession.setDisplayMediaRequestHandler(
     async (request, callback) => {
       try {
@@ -43,7 +46,7 @@ module.exports = function setupAudio({ win, ipcMain, loadSettings }) {
         if (request.videoRequested) {
           let video = null;
           try {
-            const sources = await desktopCapturer.getSources({
+            const sources = await listSources({
               types: ['screen'],
               thumbnailSize: { width: 0, height: 0 },
             });
