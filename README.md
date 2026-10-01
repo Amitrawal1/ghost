@@ -12,6 +12,7 @@ It is left out of screen shares and screenshots, so only you see it.
 - **Private.** Your key, profile and resume stay on your computer. Nothing goes anywhere except the AI provider you choose.
 - **macOS and Windows.**
 - **Hands-free.** It starts listening by itself and answers questions automatically.
+- **English, Hindi and Hinglish.** Click the language button in the listening bar to switch between Auto, English, हिंदी and Hinglish.
 - Reads your screen for coding questions, and knows your resume so it answers *as you*.
 
 ## Install
@@ -77,6 +78,10 @@ ghost help      list the commands
 
 After `ghost`, the overlay appears in the top-right corner and starts listening after a second.
 When someone asks a question, the answer shows up by itself.
+
+To change the language Ghost listens for, click the language button in the listening bar (next to ⌄).
+Each click moves to the next option: **Auto** (answers in the language of the question) → **English** → **हिंदी** → **Hinglish**.
+The choice is saved, and it is the same setting as ⚙ → "Language they speak".
 
 ### Hotkeys
 On macOS the keys are ⌘⇧ (Command+Shift). On Windows they are Ctrl+Shift.

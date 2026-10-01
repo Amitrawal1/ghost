@@ -352,6 +352,39 @@ function cycleMode() {
 
 document.querySelectorAll('#modes button').forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
 
+// ---------- Listening language (quick switch in the mic bar; same setting as ⚙ "Language they speak") ----------
+
+const LANGS = ['auto', 'en', 'hi', 'hinglish'];
+const LANG_LABELS = { auto: 'Auto', en: 'English', hi: 'हिंदी', hinglish: 'Hinglish' };
+const LANG_NAMES = {
+  auto: 'Auto (answers in the language of the question)',
+  en: 'English',
+  hi: 'Hindi',
+  hinglish: 'Hinglish (Hindi + English mix)',
+};
+let language = 'auto';
+
+function renderLanguage() {
+  $('btn-lang').textContent = LANG_LABELS[language];
+  $('btn-lang').title = `Language they speak: ${LANG_NAMES[language]}. Click to change.`;
+  $('btn-lang').dataset.lang = language;
+}
+
+async function setLanguage(next, announce = true) {
+  if (!LANGS.includes(next)) return;
+  language = next;
+  renderLanguage();
+  if (!$('settings').classList.contains('hidden')) $('s-language').value = language;
+  if (announce) setStatus(`Language: ${LANG_NAMES[language]}`);
+  try {
+    await window.ghost.saveSettings({ language });
+  } catch (err) {
+    setStatus(`Could not save language: ${err.message}`);
+  }
+}
+
+$('btn-lang').onclick = () => setLanguage(LANGS[(LANGS.indexOf(language) + 1) % LANGS.length]);
+
 // ---------- Font size (per-device, localStorage) ----------
 
 const FONT_MIN = 10;
@@ -581,6 +614,10 @@ async function saveSettings() {
   const settings = {};
   SETTING_KEYS.forEach((k) => (settings[k] = $(`s-${k}`).value.trim()));
   await window.ghost.saveSettings(settings);
+  if (LANGS.includes(settings.language)) {
+    language = settings.language;
+    renderLanguage();
+  }
   try {
     window.audio?.setSource?.($('s-source').value);
     window.audio?.setAutoListen?.($('s-autoListen').checked);
@@ -652,6 +689,8 @@ window.addEventListener('load', () => setTimeout(() => setCompact(!output.queryS
 window.ghost.getSettings().then((s) => {
   if (MODES.includes(s.mode)) mode = s.mode;
   renderMode();
+  if (LANGS.includes(s.language)) language = s.language;
+  renderLanguage();
   if (!s.apiKey) {
     addMessage('error', 'No API key yet. Paste a free Groq key from console.groq.com/keys below, then click Save.');
     openSettings();
