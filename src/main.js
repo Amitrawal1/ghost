@@ -193,21 +193,83 @@ function captureWithScreencaptureTool() {
   });
 }
 
-const SCREEN_MAX = 1280; // a Groq image costs the same ~1.8k tokens at any size, and 1280px keeps code readable
+// Groq shrinks every image to a fixed pixel budget, so on a busy screen the question becomes
+// tiny text. Cropping to the window the user is working in gives the question more detail
+// (and costs fewer tokens: ~1.4k instead of ~2.5k for a typical browser window).
+const SCREEN_MAX = 1600; // longest side sent to the API
+const CAPTURE_MAX = 2560; // longest side captured, so a crop keeps enough detail
+
+// macOS: bounds (in screen points) of the frontmost normal window that isn't Ghost.
+// CGWindowListCopyWindowInfo lists on-screen windows front to back, and reading bounds
+// needs no Accessibility permission.
+const FRONT_WINDOW_JXA = `
+ObjC.import('CoreGraphics');
+const pid = Number($.NSProcessInfo.processInfo.environment.objectForKey('GHOST_PID').js);
+const list = ObjC.deepUnwrap(ObjC.castRefToObject($.CGWindowListCopyWindowInfo(1 | 16, 0))) || [];
+const w = list.find((w) => w.kCGWindowLayer === 0 && w.kCGWindowAlpha > 0 && w.kCGWindowOwnerPID !== pid &&
+  w.kCGWindowBounds.Width >= 300 && w.kCGWindowBounds.Height >= 200);
+JSON.stringify(w ? { x: w.kCGWindowBounds.X, y: w.kCGWindowBounds.Y, width: w.kCGWindowBounds.Width,
+  height: w.kCGWindowBounds.Height, app: w.kCGWindowOwnerName } : null);`;
+
+function frontWindowBounds() {
+  if (process.platform !== 'darwin') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    execFile(
+      '/usr/bin/osascript',
+      ['-l', 'JavaScript', '-e', FRONT_WINDOW_JXA],
+      { timeout: 2000, env: { ...process.env, GHOST_PID: String(process.pid) } },
+      (err, out) => {
+        try {
+          resolve(err ? null : JSON.parse(out));
+        } catch {
+          resolve(null);
+        }
+      }
+    );
+  });
+}
+
+// Crop img (a capture of `display`) to the front window. Small windows (a Zoom thumbnail,
+// a mini player) are not worth trusting, so they keep the whole screen.
+function cropToWindow(img, display, win) {
+  if (!win) return null;
+  const d = display.bounds;
+  const x0 = Math.max(win.x, d.x);
+  const y0 = Math.max(win.y, d.y);
+  const x1 = Math.min(win.x + win.width, d.x + d.width);
+  const y1 = Math.min(win.y + win.height, d.y + d.height);
+  if (x1 <= x0 || y1 <= y0) return null;
+  const share = ((x1 - x0) * (y1 - y0)) / (d.width * d.height);
+  if (share < 0.2 || share > 0.95) return null;
+  const { width, height } = img.getSize();
+  const sx = width / d.width;
+  const sy = height / d.height;
+  const rect = {
+    x: Math.round((x0 - d.x) * sx),
+    y: Math.round((y0 - d.y) * sy),
+    width: Math.round((x1 - x0) * sx),
+    height: Math.round((y1 - y0) * sy),
+  };
+  rect.width = Math.min(rect.width, width - rect.x);
+  rect.height = Math.min(rect.height, height - rect.y);
+  return img.crop(rect);
+}
 
 async function captureScreen() {
   const permission = screenPermission();
   if (permission === 'denied' || permission === 'restricted') throw screenPermissionError();
 
   // The display the user is working on (where the mouse is), not always the primary one.
-  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const frontWindow = frontWindowBounds(); // runs while the screen is captured
   let img = null;
   let firstError = null;
   try {
-    // Ask for the final size directly: a full Retina thumbnail is ~5k×3k and slow to make.
+    // Ask for the size we need directly: a full-size Retina thumbnail can be ~5k×3k and slow to make.
+    const pixels = Math.min(CAPTURE_MAX, Math.max(display.size.width, display.size.height) * display.scaleFactor);
     const sources = await getScreenSources({
       types: ['screen'],
-      thumbnailSize: { width: SCREEN_MAX, height: SCREEN_MAX },
+      thumbnailSize: { width: pixels, height: pixels },
     });
     const source = sources.find((s) => s.display_id === String(display.id)) || sources[0];
     if (source && !source.thumbnail.isEmpty()) img = source.thumbnail;
@@ -217,6 +279,7 @@ async function captureScreen() {
   if (!img && process.platform === 'darwin') {
     try {
       img = await captureWithScreencaptureTool();
+      display = screen.getPrimaryDisplay(); // screencapture -m takes the main display
       logLine(`screen: desktopCapturer failed (${firstError ? firstError.message : 'no source'}), used screencapture`);
     } catch (err) {
       logLine(`screen: capture failed: ${firstError ? firstError.message : 'no source'} / ${err.message}`);
@@ -228,9 +291,27 @@ async function captureScreen() {
       "Couldn't capture the screen just now. Try again in a moment. If it keeps failing, quit Ghost (⌘⇧Q) and open it again."
     );
   }
-  if (img.getSize().width > SCREEN_MAX) img = img.resize({ width: SCREEN_MAX, quality: 'good' });
-  return `data:image/jpeg;base64,${img.toJPEG(70).toString('base64')}`;
+  const win = await frontWindow;
+  const cropped = cropToWindow(img, display, win);
+  if (cropped && !cropped.isEmpty()) img = cropped;
+  logLine(`screen: ${cropped ? `cropped to ${win.app} window` : 'whole screen'} ${img.getSize().width}×${img.getSize().height}`);
+  const { width, height } = img.getSize();
+  if (Math.max(width, height) > SCREEN_MAX) {
+    img = img.resize(width >= height ? { width: SCREEN_MAX, quality: 'good' } : { height: SCREEN_MAX, quality: 'good' });
+  }
+  return `data:image/jpeg;base64,${img.toJPEG(75).toString('base64')}`;
 }
+
+// The default ask when the user didn't type anything. A busy screen has many question-like
+// things (chat, comments, ads, emails), so tell the model to find the one that matters.
+const SCREEN_ASK =
+  'This is a screenshot of my screen. Find the ONE question or task I need to answer right now. ' +
+  'It is usually the main, biggest or most central question: an interview question, a test or quiz question, ' +
+  'or a coding problem. Ignore everything else on the screen: menus, tabs, sidebars, chat messages, comments, ' +
+  'ads, emails, unrelated code and other windows. Do not describe the screen or list what you see. ' +
+  'Read that question and any options, examples or constraints carefully, then answer it. ' +
+  'If it is multiple choice, say which option is right and why. ' +
+  'If there is no question at all, say in one short line what is on the screen.';
 
 // Free tiers are billed per input token, so a screenshot question drops the resume
 // and the chat history: the image is the context that matters there.
@@ -407,7 +488,7 @@ ipcMain.handle('ask-screen', async (_e, text) => {
   const settings = loadSettings();
   return streamChat(
     [
-      { type: 'text', text: text || 'Look at this screen. If there is a question or coding problem, solve it. Otherwise summarize what matters.' },
+      { type: 'text', text: text || SCREEN_ASK },
       { type: 'image_url', image_url: { url: image } },
     ],
     settings.visionModel
